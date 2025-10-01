@@ -22,10 +22,10 @@ type Content struct {
 	ContentType string
 }
 
-func (self *Server) handleContent(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.Path
 	path := strings.TrimPrefix(uri, "/content/")
-	c, ok := self.Contents[path]
+	c, ok := s.Contents[path]
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -34,16 +34,16 @@ func (self *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 	c.Handler(path, c.ContentType, w, r)
 }
 
-func (self *Server) AddContent(c Content) {
-	self.contentMutex.Lock()
-	defer self.contentMutex.Unlock()
+func (s *Server) AddContent(c Content) {
+	s.contentMutex.Lock()
+	defer s.contentMutex.Unlock()
 
-	self.Contents[c.Path] = c
+	s.Contents[c.Path] = c
 }
 
-func (self *Server) RemoveContent(p string) {
-	self.contentMutex.Lock()
-	defer self.contentMutex.Unlock()
+func (s *Server) RemoveContent(p string) {
+	s.contentMutex.Lock()
+	defer s.contentMutex.Unlock()
 
-	delete(self.Contents, p)
+	delete(s.Contents, p)
 }

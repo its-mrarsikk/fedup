@@ -32,7 +32,7 @@ func statusCode(code int, msg string) http.HandlerFunc {
 	}
 }
 
-func (self *Server) handlePing(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handlePing(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "fedupd %s (go %s)\n", shared.Version, runtime.Version())
 }
 
