@@ -18,8 +18,9 @@ type Server struct {
 }
 
 type HttpServerChannels struct {
-	Err          chan error
-	ServeContent chan Content
+	Err           chan error
+	ServeContent  chan Content
+	RemoveContent chan string
 }
 
 /*
@@ -60,6 +61,13 @@ func RunServer(port int, ch *HttpServerChannels) *Server {
 		for {
 			c := <-ch.ServeContent
 			srv.AddContent(c)
+		}
+	}()
+
+	go func() {
+		for {
+			c := <-ch.RemoveContent
+			srv.RemoveContent(c)
 		}
 	}()
 

@@ -40,3 +40,10 @@ func (self *Server) AddContent(c Content) {
 
 	self.Contents[c.Path] = c
 }
+
+func (self *Server) RemoveContent(p string) {
+	self.contentMutex.Lock()
+	defer self.contentMutex.Unlock()
+
+	delete(self.Contents, p)
+}

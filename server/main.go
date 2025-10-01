@@ -31,8 +31,9 @@ func main() {
 	log.Printf("fedupd %s (source code under LGPL v2.1) with Go %s", shared.Version, runtime.Version())
 
 	httpChannels := httpserver.HttpServerChannels{
-		Err:          make(chan error),
-		ServeContent: make(chan httpserver.Content),
+		Err:           make(chan error),
+		ServeContent:  make(chan httpserver.Content),
+		RemoveContent: make(chan string),
 	}
 	mainShouldQuit := make(chan error)
 
