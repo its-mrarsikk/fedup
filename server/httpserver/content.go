@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"net/http"
+	"strings"
 )
 
 // A handler to be called whenever a /content/ endpoint is requested.
@@ -19,4 +20,23 @@ type Content struct {
 	Path        string
 	Handler     ContentHandler
 	ContentType string
+}
+
+func (self *Server) handleContent(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.Path
+	path := strings.TrimPrefix(uri, "/content/")
+	c, ok := self.Contents[path]
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	c.Handler(path, c.ContentType, w, r)
+}
+
+func (self *Server) AddContent(c Content) {
+	self.contentMutex.Lock()
+	defer self.contentMutex.Unlock()
+
+	self.Contents[c.Path] = c
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"runtime"
-	"strings"
 	"sync"
 
 	"github.com/its-mrarsikk/fedup/shared"
@@ -16,13 +15,6 @@ type Server struct {
 	*http.Server // embed
 	Contents     ContentList
 	contentMutex sync.RWMutex
-}
-
-func (self *Server) AddContent(c Content) {
-	self.contentMutex.Lock()
-	defer self.contentMutex.Unlock()
-
-	self.Contents[c.Path] = c
 }
 
 type HttpServerChannels struct {
@@ -41,18 +33,6 @@ func statusCode(code int, msg string) http.HandlerFunc {
 
 func (self *Server) handlePing(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "fedupd %s (go %s)\n", shared.Version, runtime.Version())
-}
-
-func (self *Server) handleContent(w http.ResponseWriter, r *http.Request) {
-	uri := r.URL.Path
-	path := strings.TrimPrefix(uri, "/content/")
-	c, ok := self.Contents[path]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	c.Handler(path, c.ContentType, w, r)
 }
 
 // graceful shutdown logic from https://stackoverflow.com/a/42533360
