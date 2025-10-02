@@ -11,7 +11,7 @@ import (
 
 func TestPing(t *testing.T) {
 	port := 55928
-	ch := HttpServerChannels{Err: make(chan error)}
+	ch := HttpServerChannels{Err: make(chan error), ServeContent: make(chan Content), RemoveContent: make(chan string)}
 
 	go func() {
 		err := <-ch.Err
