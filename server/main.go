@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/its-mrarsikk/fedup/server/httpserver"
 	"github.com/its-mrarsikk/fedup/shared"
 )
 
@@ -29,7 +30,11 @@ func stopHttp(srv *http.Server) {
 func main() {
 	log.Printf("fedupd %s (source code under LGPL v2.1) with Go %s", shared.Version, runtime.Version())
 
-	httpChannels := HttpServerChannels{Err: make(chan error)}
+	httpChannels := httpserver.HttpServerChannels{
+		Err:           make(chan error),
+		ServeContent:  make(chan httpserver.Content),
+		RemoveContent: make(chan string),
+	}
 	mainShouldQuit := make(chan error)
 
 	port := 4545
@@ -52,7 +57,7 @@ func main() {
 		mainShouldQuit <- fmt.Errorf("Got signal %s", <-signalCh)
 	}()
 
-	srv := RunServer(port, &httpChannels)
+	srv := httpserver.RunServer(port, &httpChannels)
 
 	quitReason := <-mainShouldQuit
 
@@ -60,7 +65,7 @@ func main() {
 		log.Printf("Exit requested with reason: %s", quitReason)
 	}
 
-	stopHttp(srv)
+	stopHttp(srv.Server)
 
 	log.Printf("All done, clocking out.")
 }

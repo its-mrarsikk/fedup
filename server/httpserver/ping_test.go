@@ -1,32 +1,13 @@
-package main
+package httpserver_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestPing(t *testing.T) {
-	port := 55928
-	ch := HttpServerChannels{Err: make(chan error)}
-
-	go func() {
-		err := <-ch.Err
-		t.Fatalf("server had error: %s", err) // i've found no good way to do this error listening in the test goroutine
-	}()
-
-	srv := RunServer(port, &ch)
-	defer func() {
-		if err := srv.Shutdown(context.Background()); err != nil && err != http.ErrServerClosed {
-			t.Fatalf("failed to shutdown: %s", err)
-		}
-	}()
-
-	time.Sleep(100 * time.Millisecond)
-
 	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/ping", port))
 	if err != nil {
 		t.Fatalf("error making GET: %s", err)
