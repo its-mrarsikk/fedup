@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -132,7 +133,8 @@ func ParseRSS(r io.Reader) (*Feed, error) {
 	for itemElem := range channel.SelectElementsSeq("item") {
 		item, err := itemElementToItem(itemElem, feed)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse <item> element: %w", err)
+			log.Printf("failed to parse <item> element in feed %q: %s", feed.Title, err)
+			continue
 		}
 		feed.Items = append(feed.Items, item)
 	}
