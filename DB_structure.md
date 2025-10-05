@@ -11,6 +11,7 @@ Column `id` (primary int): Unique ID
 Column `feed_id` (foreign int): References `feeds.id`  
 Column `guid` (unique nullable string): Unique RSS item identifier  
 Column `title` (nullable string): Item title  
+Column `description` (nullable string): Item description  
 Column `link` (nullable string): Item URL  
 Column `author` (nullable string): Author of the item  
 Column `pubDate` (nullable datetime): Publication date/time  

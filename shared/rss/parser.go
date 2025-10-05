@@ -83,12 +83,13 @@ func itemElementToItem(e *etree.Element, feed *Feed) (*Item, error) {
 
 	// TODO: add error handling
 	item := &Item{
-		Feed:    feed,
-		GUID:    e.SelectElement("guid").NotNil().Text(),
-		Title:   e.SelectElement("title").NotNil().Text(),
-		Link:    func() *url.URL { url, _ := url.Parse(e.SelectElement("link").NotNil().Text()); return url }(),
-		Author:  e.SelectElement("author").NotNil().Text(),
-		PubDate: func() *time.Time { date, _ := parseRSSDate(e.SelectElement("pubDate").NotNil().Text()); return &date }(),
+		Feed:        feed,
+		GUID:        e.SelectElement("guid").NotNil().Text(),
+		Title:       e.SelectElement("title").NotNil().Text(),
+		Description: e.SelectElement("description").NotNil().Text(),
+		Link:        func() *url.URL { url, _ := url.Parse(e.SelectElement("link").NotNil().Text()); return url }(),
+		Author:      e.SelectElement("author").NotNil().Text(),
+		PubDate:     func() *time.Time { date, _ := parseRSSDate(e.SelectElement("pubDate").NotNil().Text()); return &date }(),
 	}
 
 	var enclosure *Enclosure
@@ -105,6 +106,8 @@ func itemElementToItem(e *etree.Element, feed *Feed) (*Item, error) {
 	return item, nil
 }
 
+// ParseRSS takes a reader with RSS XML and converts it to a Feed object
+// This parser is not fully up to spec: it allows enclosure subelements to be null; allows both title and description of an item to be null
 func ParseRSS(r io.Reader) (*Feed, error) {
 	doc := etree.NewDocument()
 	if _, err := doc.ReadFrom(r); err != nil {
