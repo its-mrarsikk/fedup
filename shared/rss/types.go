@@ -7,6 +7,7 @@ import (
 
 // Feed represents an RSS channel
 type Feed struct {
+	DatabaseID  int
 	Title       string
 	Description string
 	// The link to the HTML representation of the feed. Different from FetchFrom
@@ -21,6 +22,7 @@ type Feed struct {
 
 // Item represents an RSS item/post
 type Item struct {
+	DatabaseID int
 	// The feed this item came from
 	Feed        *Feed
 	GUID        string
