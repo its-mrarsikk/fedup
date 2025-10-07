@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS feeds (
     id INTEGER PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
+	link TEXT,
+	fetchFrom TEXT,
     language TEXT,
     ttl INTEGER
 );

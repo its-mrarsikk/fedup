@@ -3,6 +3,8 @@
 Column `id` (primary int): Unique ID  
 Column `title` (string): RSS title  
 Column `description` (string): RSS description  
+Column `link` (nullable string): Link to HTML feed
+Column `fetchFrom` (nullable string): Link to RSS feed
 Column `language` (nullable string): RSS language  
 Column `ttl` (nullable int): RSS time-to-live (cache time before refreshing) in minutes  
 
