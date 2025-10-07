@@ -8,6 +8,10 @@ import (
 	"github.com/its-mrarsikk/fedup/shared/rss"
 )
 
+type RowScanner interface {
+	Scan(...any) error
+}
+
 func safeURLParse(s sql.NullString) *url.URL {
 	if !s.Valid {
 		return nil
@@ -41,7 +45,7 @@ func FeedSerialize(f *rss.Feed) ([]any, string) {
 		f.TTL}, "(?,?,?,?,?,?,?)"
 }
 
-func FeedDeserialize(r *sql.Row) (*rss.Feed, error) {
+func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
 	var dbid int
 	var title, description string
 	var link, fetchFrom, language sql.NullString
