@@ -16,7 +16,7 @@ Column `title` (nullable string): Item title
 Column `description` (nullable string): Item description  
 Column `link` (nullable string): Item URL  
 Column `author` (nullable string): Author of the item  
-Column `pubDate` (nullable datetime): Publication date/time  
+Column `pubDate` (nullable string): Publication date/time in RFC3339 format  
 Column `read` (boolean, default false): Whether the item has been marked as read  
 Column `enclosure_url` (nullable string): URL for media enclosure (if any)  
 Column `enclosure_type` (nullable string): MIME type of the enclosure  

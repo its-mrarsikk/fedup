@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS items (
     description TEXT,
     link TEXT,
     author TEXT,
-    pubDate DATETIME,
+    pubDate TEXT,
     read BOOLEAN NOT NULL DEFAULT 0,
     enclosure_url TEXT,
     enclosure_type TEXT,
