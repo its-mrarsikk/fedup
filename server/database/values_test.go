@@ -18,6 +18,9 @@ const (
 
 	expectedItemTitle   = "Louisiana Students to Hear from NASA Astronauts Aboard Space Station"
 	expectedItemPubDate = "1996-12-19T16:39:57-08:00"
+
+	expectedEnclosureUrl    = "https://example.com"
+	expectedEnclosureLength = 42
 )
 
 type mockRow struct {
@@ -44,6 +47,8 @@ func (m *mockRow) Scan(dest ...any) error {
 		case *sql.NullInt64:
 			if v, ok := m.values[i].(int64); ok {
 				*d = sql.NullInt64{Int64: v, Valid: true}
+			} else if v, ok := m.values[i].(int); ok {
+				*d = sql.NullInt64{Int64: int64(v), Valid: true}
 			} else {
 				*d = sql.NullInt64{Valid: false}
 			}
@@ -143,5 +148,48 @@ func TestItemSerialize(t *testing.T) {
 
 	if gotPubDate != expectedItemPubDate {
 		t.Fatalf("expected item pubDate %q, got %q", expectedItemPubDate, gotPubDate)
+	}
+}
+
+func TestItemDeserialize(t *testing.T) {
+	tPubDate, err := time.Parse(time.RFC3339, expectedItemPubDate)
+	if err != nil {
+		panic(err)
+	}
+
+	uEnclosureURL, err := url.Parse(expectedEnclosureUrl)
+	if err != nil {
+		panic(err)
+	}
+
+	m := mockRow{values: []any{6, 1, nil, expectedItemTitle, nil, nil, nil, expectedItemPubDate, 1, expectedEnclosureUrl, "text/plain", expectedEnclosureLength}}
+	f := &rss.Feed{DatabaseID: 1}
+
+	i, err := database.ItemDeserialize(&m, f)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	if i.Title != expectedItemTitle {
+		t.Fatalf("expected item title %q, got %q", expectedItemTitle, i.Title)
+	}
+
+	if *i.PubDate != tPubDate {
+		t.Fatalf("expected item pubdate %s, got %s",
+			expectedItemPubDate, i.PubDate.Format(time.RFC3339))
+	}
+
+	if i.Enclosure == nil {
+		t.Fatal("enclosure is nil")
+	}
+
+	if *i.Enclosure.URL != *uEnclosureURL {
+		t.Fatalf("expected enclosure url %q, got %q",
+			expectedEnclosureUrl, i.Enclosure.URL.String())
+	}
+
+	if i.Enclosure.Length != expectedEnclosureLength { // leb
+		t.Fatalf("expected enclosure length %d, got %d",
+			expectedEnclosureLength, i.Enclosure.Length)
 	}
 }

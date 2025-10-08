@@ -128,3 +128,59 @@ func ItemSerialize(i *rss.Item) ([]any, string) {
 		encLength,
 	}, "(?,?,?,?,?,?,?,?,?,?,?,?)"
 }
+
+func ItemDeserialize(r RowScanner, feed *rss.Feed) (*rss.Item, error) {
+	var dbid, feedID int
+	var guid, title, description, link, author sql.NullString
+	var pubDate sql.NullString
+	var read int
+	var enclosureURL, enclosureType sql.NullString
+	var enclosureLength sql.NullInt64
+
+	err := r.Scan(&dbid, &feedID, &guid, &title, &description, &link, &author, &pubDate, &read, &enclosureURL, &enclosureType, &enclosureLength)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan row: %w", err)
+	}
+
+	var (
+		urlLink, urlEnclosure *url.URL
+		timePubDate           *time.Time
+		enclosure             *rss.Enclosure
+	)
+
+	urlLink = safeURLParse(link)
+
+	if pubDate.Valid {
+		t, err := time.Parse(time.RFC3339, pubDate.String)
+		if err == nil {
+			timePubDate = &t
+		}
+	}
+
+	urlEnclosure = safeURLParse(enclosureURL)
+	if urlEnclosure != nil && enclosureType.Valid && enclosureLength.Valid {
+		enclosure = &rss.Enclosure{
+			URL:      urlEnclosure,
+			MimeType: enclosureType.String,
+			Length:   int(enclosureLength.Int64),
+		}
+	}
+
+	return &rss.Item{
+		DatabaseID: dbid,
+		Feed:       feed,
+		GUID:       guid.String,
+		Title:      title.String,
+		Description: func() string {
+			if description.Valid {
+				return description.String
+			}
+			return ""
+		}(),
+		Link:      urlLink,
+		Author:    author.String,
+		PubDate:   timePubDate,
+		Read:      read != 0, // int to bool conversion
+		Enclosure: enclosure,
+	}, nil
+}
