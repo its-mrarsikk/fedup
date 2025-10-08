@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/its-mrarsikk/fedup/shared/rss"
 )
@@ -84,4 +85,46 @@ func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
 		Language:    strLanguage,
 		TTL:         intTTL,
 	}, nil
+}
+
+// ITEMS //
+
+func ItemSerialize(i *rss.Item) ([]any, string) {
+	var link, pubDate, encURL, encType string
+	var encLength int
+
+	if i.Link != nil {
+		link = i.Link.String()
+	} else {
+		link = ""
+	}
+
+	if i.PubDate != nil {
+		pubDate = i.PubDate.Format(time.RFC3339)
+	} else {
+		pubDate = ""
+	}
+
+	if i.Enclosure != nil {
+		if i.Enclosure.URL != nil {
+			encURL = i.Enclosure.URL.String()
+		}
+		encType = i.Enclosure.MimeType
+		encLength = i.Enclosure.Length
+	}
+
+	return []any{
+		i.DatabaseID,
+		i.Feed.DatabaseID,
+		i.GUID,
+		i.Title,
+		i.Description,
+		link,
+		i.Author,
+		pubDate,
+		i.Read,
+		encURL,
+		encType,
+		encLength,
+	}, "(?,?,?,?,?,?,?,?,?,?,?,?)"
 }

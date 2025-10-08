@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/its-mrarsikk/fedup/server/database"
 	"github.com/its-mrarsikk/fedup/shared/rss"
@@ -14,6 +15,9 @@ const (
 	expectedFeedTitle = "Testing Feed"
 	expectedFeedLink  = "https://example.com"
 	expectedFeedTTL   = 60
+
+	expectedItemTitle   = "Louisiana Students to Hear from NASA Astronauts Aboard Space Station"
+	expectedItemPubDate = "1996-12-19T16:39:57-08:00"
 )
 
 type mockRow struct {
@@ -105,5 +109,39 @@ func TestFeedDeserialize(t *testing.T) {
 
 	if f.TTL != expectedFeedTTL {
 		t.Fatalf("expected TTL %d, got %d", expectedFeedTTL, f.TTL)
+	}
+}
+
+func TestItemSerialize(t *testing.T) {
+	tPubDate, err := time.Parse(time.RFC3339, expectedItemPubDate)
+	if err != nil {
+		panic(err)
+	}
+
+	f := &rss.Feed{
+		DatabaseID:  4,
+		Title:       expectedFeedTitle,
+		Description: "Test",
+		Link:        nil,
+		FetchFrom:   nil,
+		TTL:         expectedFeedTTL,
+	}
+
+	i := &rss.Item{
+		DatabaseID: 6,
+		Feed:       f,
+		Title:      expectedItemTitle,
+		PubDate:    &tPubDate,
+	}
+
+	placeholders, _ := database.ItemSerialize(i)
+	gotTitle, gotPubDate := placeholders[3].(string), placeholders[7].(string)
+
+	if gotTitle != expectedItemTitle {
+		t.Fatalf("expected item title %q, got %q", expectedItemTitle, gotTitle)
+	}
+
+	if gotPubDate != expectedItemPubDate {
+		t.Fatalf("expected item pubDate %q, got %q", expectedItemPubDate, gotPubDate)
 	}
 }
