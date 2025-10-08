@@ -21,5 +21,3 @@ Column `read` (boolean, default false): Whether the item has been marked as read
 Column `enclosure_url` (nullable string): URL for media enclosure (if any)  
 Column `enclosure_type` (nullable string): MIME type of the enclosure  
 Column `enclosure_length` (nullable int): Length in bytes of the enclosure  
-Column `source_url` (nullable string): URL of the source
-Column `source_name` (nullable string): Name of the source

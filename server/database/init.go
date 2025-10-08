@@ -36,8 +36,6 @@ CREATE TABLE IF NOT EXISTS items (
     enclosure_url TEXT,
     enclosure_type TEXT,
     enclosure_length INTEGER,
-    source_url TEXT,
-    source_name TEXT,
     FOREIGN KEY(feed_id) REFERENCES feeds(id)
 );`
 )
