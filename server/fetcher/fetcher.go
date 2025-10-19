@@ -22,6 +22,7 @@ type FetchFeed struct { // dont got a good name for this one
 	url     *url.URL
 	ttl     time.Duration
 	ticker  *time.Ticker
+	tickCh  chan time.Time
 	done    chan struct{}
 	fetcher *Fetcher
 
@@ -41,6 +42,8 @@ type FetcherChannels struct {
 	FetchedFeeds chan *rss.Feed
 	Err          chan error
 }
+
+var ErrNewTTL = errors.New("ttl changed")
 
 // NewFetcher constructs and returns a Fetcher with initialized FetchedFeeds and Err channels, and an http.Client.
 func NewFetcher() *Fetcher {
@@ -130,15 +133,15 @@ func (ff *FetchFeed) fetchAndParse() error {
 	parsed.FetchFrom = ff.url
 	ff.fetcher.Ch.FetchedFeeds <- parsed
 
+	if parsed.TTL != 0 && !(time.Duration(parsed.TTL)*time.Minute == ff.ttl) {
+		ff.ttl = time.Duration(parsed.TTL) * time.Minute
+		return ErrNewTTL
+	}
+
 	return nil
 }
 
 func (ff *FetchFeed) watch() {
-	err := ff.fetchAndParse()
-	if err != nil {
-		ff.fetcher.Ch.Err <- err
-	}
-
 	for {
 		select {
 		case <-ff.done:
@@ -147,10 +150,19 @@ func (ff *FetchFeed) watch() {
 				ff.ticker = nil
 			}
 			return
-		case <-ff.ticker.C:
+		case <-ff.tickCh:
 			err := ff.fetchAndParse()
 			if err != nil {
-				ff.fetcher.Ch.Err <- err
+				if errors.Is(err, ErrNewTTL) {
+					log.Printf("Fetcher %q: discovered new TTL %s, restarting", ff.url.String(), ff.ttl)
+					if ff.ticker != nil {
+						ff.ticker.Stop()
+						ff.ticker = nil
+					}
+					startFeed(ff)
+					return
+				}
+				go func(e error) { ff.fetcher.Ch.Err <- e }(err)
 			}
 		}
 	}
@@ -186,6 +198,21 @@ func (f *Fetcher) AddFeed(rawurl string, optTtl *time.Duration) error {
 	return nil
 }
 
+func startFeed(ff *FetchFeed) {
+	ff.ticker = time.NewTicker(ff.ttl)
+	ff.done = make(chan struct{})
+	ff.tickCh = make(chan time.Time, 1)
+	ff.tickCh <- time.Time{}
+	go func() {
+		for v := range ff.ticker.C {
+			ff.tickCh <- v
+		}
+		close(ff.tickCh)
+	}()
+
+	go ff.watch()
+}
+
 func (f *Fetcher) Start() error {
 	if f.started == true {
 		return nil
@@ -204,9 +231,7 @@ func (f *Fetcher) Start() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, ff := range f.feeds {
-		ff.ticker = time.NewTicker(ff.ttl)
-		ff.done = make(chan struct{})
-		go ff.watch()
+		startFeed(ff)
 	}
 
 	f.started = true
