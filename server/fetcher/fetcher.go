@@ -213,6 +213,14 @@ func startFeed(ff *FetchFeed) {
 	go ff.watch()
 }
 
+func (f *Fetcher) GetFeeds() (l map[string]time.Duration) {
+	l = make(map[string]time.Duration)
+	for _, ff := range f.feeds {
+		l[ff.url.String()] = ff.ttl
+	}
+	return
+}
+
 func (f *Fetcher) Start() error {
 	if f.started == true {
 		return nil
