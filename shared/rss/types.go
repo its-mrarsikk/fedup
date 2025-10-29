@@ -16,8 +16,10 @@ type Feed struct {
 	FetchFrom *url.URL
 	Language  string
 	// The time-to-live of the feed. Time in minutes that the reader should wait between each refresh
-	TTL   int
-	Items []*Item
+	TTL          int
+	ETag         string
+	LastModified time.Time
+	Items        []*Item
 }
 
 // Item represents an RSS item/post
@@ -32,6 +34,7 @@ type Item struct {
 	Author      string
 	PubDate     *time.Time
 	Read        bool
+	Starred     bool
 	Enclosure   *Enclosure
 }
 
