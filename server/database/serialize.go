@@ -45,7 +45,32 @@ func FeedSerializeInsert(f *rss.Feed) ([]any, string) {
 		f.TTL,
 		f.ETag,
 		lastModified,
-	}, "(?,?,?,?,?,?,?,?,?)"
+	}, "INSERT INTO feeds VALUES (?,?,?,?,?,?,?,?,?);"
+}
+
+func FeedSerializeUpdate(f *rss.Feed) ([]any, string) {
+	var link, fetchFrom, lastModified string
+	if f.Link != nil {
+		link = f.Link.String()
+	}
+	if f.FetchFrom != nil {
+		fetchFrom = f.FetchFrom.String()
+	}
+	if !f.LastModified.IsZero() {
+		lastModified = f.LastModified.Format(time.RFC3339)
+	}
+
+	return []any{
+		f.Title,
+		f.Description,
+		link,
+		fetchFrom,
+		f.Language,
+		f.TTL,
+		f.ETag,
+		lastModified,
+		f.DatabaseID,
+	}, "UPDATE feeds SET title = ?, description = ?, link = ?, fetchFrom = ?, language = ?, ttl = ?, etag = ?, lastModified = ? WHERE id = ?;"
 }
 
 func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
@@ -112,7 +137,31 @@ func ItemSerializeInsert(i *rss.Item) ([]any, string) {
 		pubDate,
 		i.Read,
 		i.Starred,
-	}, "(?,?,?,?,?,?,?,?,?,?)"
+	}, "INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?);"
+}
+
+func ItemSerializeUpdate(i *rss.Item) ([]any, string) {
+	var link, pubDate string
+
+	if i.Link != nil {
+		link = i.Link.String()
+	}
+	if i.PubDate != nil {
+		pubDate = i.PubDate.Format(time.RFC3339)
+	}
+
+	return []any{
+		i.Feed.DatabaseID,
+		i.GUID,
+		i.Title,
+		i.Description,
+		link,
+		i.Author,
+		pubDate,
+		i.Read,
+		i.Starred,
+		i.DatabaseID,
+	}, "UPDATE items SET feed_id = ?, guid = ?, title = ?, description = ?, link = ?, author = ?, pubDate = ?, read = ?, starred = ? WHERE id = ?;"
 }
 
 func ItemDeserialize(r RowScanner, feed *rss.Feed) (*rss.Item, error) {
