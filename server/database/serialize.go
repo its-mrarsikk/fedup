@@ -24,26 +24,28 @@ func safeURLParse(s sql.NullString) *url.URL {
 	return u
 }
 
-func FeedSerialize(f *rss.Feed) ([]any, string) {
-	var link, fetchFrom string
+func FeedSerializeInsert(f *rss.Feed) ([]any, string) {
+	var link, fetchFrom, lastModified string
 	if f.Link != nil {
 		link = f.Link.String()
-	} else {
-		link = ""
 	}
 	if f.FetchFrom != nil {
 		fetchFrom = f.FetchFrom.String()
-	} else {
-		fetchFrom = ""
+	}
+	if !f.LastModified.IsZero() {
+		lastModified = f.LastModified.Format(time.RFC3339)
 	}
 
-	return []any{f.DatabaseID,
+	return []any{nil, // sqlite automatically assigns a primary key on NULL
 		f.Title,
 		f.Description,
 		link,
 		fetchFrom,
 		f.Language,
-		f.TTL}, "(?,?,?,?,?,?,?)"
+		f.TTL,
+		f.ETag,
+		lastModified,
+	}, "(?,?,?,?,?,?,?,?,?)"
 }
 
 func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
@@ -89,32 +91,18 @@ func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
 
 // ITEMS //
 
-func ItemSerialize(i *rss.Item) ([]any, string) {
-	var link, pubDate, encURL, encType string
-	var encLength int
+func ItemSerializeInsert(i *rss.Item) ([]any, string) {
+	var link, pubDate string
 
 	if i.Link != nil {
 		link = i.Link.String()
-	} else {
-		link = ""
 	}
-
 	if i.PubDate != nil {
 		pubDate = i.PubDate.Format(time.RFC3339)
-	} else {
-		pubDate = ""
-	}
-
-	if i.Enclosure != nil {
-		if i.Enclosure.URL != nil {
-			encURL = i.Enclosure.URL.String()
-		}
-		encType = i.Enclosure.MimeType
-		encLength = i.Enclosure.Length
 	}
 
 	return []any{
-		i.DatabaseID,
+		nil,
 		i.Feed.DatabaseID,
 		i.GUID,
 		i.Title,
@@ -123,10 +111,8 @@ func ItemSerialize(i *rss.Item) ([]any, string) {
 		i.Author,
 		pubDate,
 		i.Read,
-		encURL,
-		encType,
-		encLength,
-	}, "(?,?,?,?,?,?,?,?,?,?,?,?)"
+		i.Starred,
+	}, "(?,?,?,?,?,?,?,?,?,?)"
 }
 
 func ItemDeserialize(r RowScanner, feed *rss.Feed) (*rss.Item, error) {
