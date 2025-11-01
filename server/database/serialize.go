@@ -76,20 +76,26 @@ func FeedSerializeUpdate(f *rss.Feed) ([]any, string) {
 func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
 	var dbid int
 	var title, description string
-	var link, fetchFrom, language sql.NullString
-	var ttl sql.NullInt64
+	var link, fetchFrom, language, etag, strLastModified sql.NullString
+	var ttl int
 
 	var urlLink, urlFetchFrom *url.URL
-	var strLanguage string
-	var intTTL int
+	var strLanguage, strEtag string
+	var lastModified time.Time
 
-	err := r.Scan(&dbid, &title, &description, &link, &fetchFrom, &language, &ttl)
+	err := r.Scan(&dbid, &title, &description, &link, &fetchFrom, &language, &ttl, &etag, &strLastModified)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan row: %w", err)
 	}
 
 	urlLink = safeURLParse(link)
-	urlFetchFrom = safeURLParse(fetchFrom)
+	if !fetchFrom.Valid {
+		return nil, fmt.Errorf("feed must have fetchFrom")
+	}
+	urlFetchFrom, err = url.Parse(fetchFrom.String)
+	if err != nil {
+		return nil, fmt.Errorf("invalid fetchFrom in feed: %w", err)
+	}
 
 	if language.Valid {
 		strLanguage = language.String
@@ -97,20 +103,27 @@ func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
 		strLanguage = ""
 	}
 
-	if ttl.Valid {
-		intTTL = int(ttl.Int64)
-	} else {
-		intTTL = 0
+	if etag.Valid {
+		strEtag = etag.String
+	}
+
+	if strLastModified.Valid {
+		lastModified, err = time.Parse(time.RFC3339, strLastModified.String)
+		if err != nil {
+			return nil, fmt.Errorf("invalid lastModified in feed: %w", err)
+		}
 	}
 
 	return &rss.Feed{
-		DatabaseID:  dbid,
-		Title:       title,
-		Description: description,
-		Link:        urlLink,
-		FetchFrom:   urlFetchFrom,
-		Language:    strLanguage,
-		TTL:         intTTL,
+		DatabaseID:   dbid,
+		Title:        title,
+		Description:  description,
+		Link:         urlLink,
+		FetchFrom:    urlFetchFrom,
+		Language:     strLanguage,
+		TTL:          ttl,
+		ETag:         strEtag,
+		LastModified: lastModified,
 	}, nil
 }
 
