@@ -41,7 +41,9 @@ type Item struct {
 // Enclosure represents an RSS enclosure, usually media associated with an item
 // See https://www.rssboard.org/rss-specification
 type Enclosure struct {
-	URL      *url.URL
-	MimeType string
-	Length   int
+	DatabaseID int
+	Item       *Item
+	URL        *url.URL
+	MimeType   string
+	FilePath   string
 }
