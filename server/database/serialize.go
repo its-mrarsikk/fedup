@@ -219,3 +219,47 @@ func ItemDeserialize(r RowScanner, feed *rss.Feed) (*rss.Item, error) {
 		Enclosure: enclosure,
 	}, nil
 }
+
+// ENCLOSURES //
+
+func EnclosureSerializeInsert(e *rss.Enclosure, itemId int) ([]any, string) {
+	return []any{
+		nil,
+		itemId,
+		e.MimeType,
+		e.URL.String(),
+		e.FilePath,
+	}, "INSERT INTO enclosures VALUES (?, ?, ?, ?, ?);"
+}
+
+func EnclosureSerializeUpdate(e *rss.Enclosure) ([]any, string) {
+	return []any{
+		e.MimeType,
+		e.URL.String(),
+		e.FilePath,
+		e.DatabaseID,
+	}, "UPDATE enclosures SET type = ?, url = ?, filePath = ? WHERE id = ?;"
+}
+
+func EnclosureDeserialize(r RowScanner) (*rss.Enclosure, error) {
+	var dbid int
+	var discardItemId int // for some reason i cant use _ in Scan?
+	var mimeType, rawUrl, filePath string
+
+	err := r.Scan(&dbid, &discardItemId, &mimeType, &rawUrl, &filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan row: %w", err)
+	}
+
+	parsedURL, err := url.Parse(rawUrl)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL in enclosure: %w", err)
+	}
+
+	return &rss.Enclosure{
+		DatabaseID: dbid,
+		MimeType:   mimeType,
+		URL:        parsedURL,
+		FilePath:   filePath,
+	}, nil
+}
