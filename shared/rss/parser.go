@@ -99,7 +99,6 @@ func itemElementToItem(e *etree.Element, feed *Feed) (*Item, error) {
 		enclosure = &Enclosure{
 			URL:      func() *url.URL { url, _ := url.Parse(enclosureElem.SelectAttrValue("url", "")); return url }(),
 			MimeType: enclosureElem.SelectAttrValue("type", ""),
-			Length:   func() int { i, _ := strconv.Atoi(enclosureElem.SelectAttrValue("length", "0")); return i }(),
 		}
 	}
 	item.Enclosure = enclosure
