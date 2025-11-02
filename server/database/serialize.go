@@ -9,10 +9,16 @@ import (
 	"github.com/its-mrarsikk/fedup/shared/rss"
 )
 
+// RowScanner is an abstraction for an SQL row that can be used as Scan(&id, &val), etc.
+//
+// This interface only exists to allow unit tests to provide mock data.
 type RowScanner interface {
 	Scan(...any) error
 }
 
+// safeURLParse uses [url.Parse] to create a [*url.URL] from s, returning nil if any errors occur.
+//
+// This is a convenience function to save typing on optional URL parameters.
 func safeURLParse(s sql.NullString) *url.URL {
 	if !s.Valid {
 		return nil
@@ -24,6 +30,8 @@ func safeURLParse(s sql.NullString) *url.URL {
 	return u
 }
 
+// feedSerializeInsert constructs a prepared SQL INSERT statement from an [rss.Feed].
+// Note that it assigns id to NULL to let SQLite autogenerate an ID.
 func feedSerializeInsert(f *rss.Feed) ([]any, string) {
 	var link, fetchFrom, lastModified string
 	if f.Link != nil {
@@ -48,6 +56,8 @@ func feedSerializeInsert(f *rss.Feed) ([]any, string) {
 	}, "INSERT INTO feeds VALUES (?,?,?,?,?,?,?,?,?);"
 }
 
+// feedSerializeUpdate constructs a prepared SQL UPDATE statement from an [rss.Feed].
+// Note that it adds all fields to SET as using some kind of diff system would be complex and overkill.
 func feedSerializeUpdate(f *rss.Feed) ([]any, string) {
 	var link, fetchFrom, lastModified string
 	if f.Link != nil {
@@ -73,6 +83,10 @@ func feedSerializeUpdate(f *rss.Feed) ([]any, string) {
 	}, "UPDATE feeds SET title = ?, description = ?, link = ?, fetchFrom = ?, language = ?, ttl = ?, etag = ?, lastModified = ? WHERE id = ?;"
 }
 
+// feedDeserialize constructs an [rss.Feed] from a [RowScanner].
+// It scans the columns in the order specified in sql/init.sql.
+//
+// Items is not constructed as it is out of the scope of this function.
 func feedDeserialize(r RowScanner) (*rss.Feed, error) {
 	var dbid int
 	var title, description string
@@ -129,6 +143,8 @@ func feedDeserialize(r RowScanner) (*rss.Feed, error) {
 
 // ITEMS //
 
+// itemSerializeInsert constructs a prepared SQL INSERT statement from an [rss.Item].
+// Note that it assigns id to NULL to let SQLite autogenerate an ID.
 func itemSerializeInsert(i *rss.Item) ([]any, string) {
 	var link, pubDate string
 
@@ -153,6 +169,8 @@ func itemSerializeInsert(i *rss.Item) ([]any, string) {
 	}, "INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?);"
 }
 
+// itemSerializeUpdate constructs a prepared SQL UPDATE statement from an [rss.Item].
+// Note that it adds all fields to SET as using some kind of diff system would be complex and overkill.
 func itemSerializeUpdate(i *rss.Item) ([]any, string) {
 	var link, pubDate string
 
@@ -177,6 +195,9 @@ func itemSerializeUpdate(i *rss.Item) ([]any, string) {
 	}, "UPDATE items SET feed_id = ?, guid = ?, title = ?, description = ?, link = ?, author = ?, pubDate = ?, read = ?, starred = ? WHERE id = ?;"
 }
 
+// itemDeserialize constructs an [rss.Item] from a [RowScanner]. It scans the columns in the order specified in sql/init.sql.
+//
+// This does not set Feed; it must be set manually by the caller if needed.
 func itemDeserialize(r RowScanner) (*rss.Item, error) {
 	var (
 		dbid, discardFeedId                                   int
@@ -217,16 +238,20 @@ func itemDeserialize(r RowScanner) (*rss.Item, error) {
 
 // ENCLOSURES //
 
-func enclosureSerializeInsert(e *rss.Enclosure, itemId int) ([]any, string) {
+// enclosureSerializeInsert constructs a prepared SQL INSERT statement from an [rss.Enclosure].
+// Note that it assigns id to NULL to let SQLite autogenerate an ID.
+func enclosureSerializeInsert(e *rss.Enclosure) ([]any, string) {
 	return []any{
 		nil,
-		itemId,
+		e.Item.DatabaseID,
 		e.MimeType,
 		e.URL.String(),
 		e.FilePath,
 	}, "INSERT INTO enclosures VALUES (?, ?, ?, ?, ?);"
 }
 
+// enclosureSerializeUpdate constructs a prepared SQL UPDATE statement from an [rss.Enclosure].
+// Note that it adds all fields to SET as using some kind of diff system would be complex and overkill.
 func enclosureSerializeUpdate(e *rss.Enclosure) ([]any, string) {
 	return []any{
 		e.MimeType,
@@ -236,6 +261,9 @@ func enclosureSerializeUpdate(e *rss.Enclosure) ([]any, string) {
 	}, "UPDATE enclosures SET type = ?, url = ?, filePath = ? WHERE id = ?;"
 }
 
+// enclosureDeserialize constructs an [rss.Enclosure] from a [RowScanner]. It scans the columns in the order specified in sql/init.sql.
+//
+// This does not set Item; it must be set manually by the caller if needed.
 func enclosureDeserialize(r RowScanner) (*rss.Enclosure, error) {
 	var dbid int
 	var discardItemId int // for some reason i cant use _ in Scan?
