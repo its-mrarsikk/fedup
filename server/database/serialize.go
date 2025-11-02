@@ -177,60 +177,42 @@ func ItemSerializeUpdate(i *rss.Item) ([]any, string) {
 	}, "UPDATE items SET feed_id = ?, guid = ?, title = ?, description = ?, link = ?, author = ?, pubDate = ?, read = ?, starred = ? WHERE id = ?;"
 }
 
-func ItemDeserialize(r RowScanner, feed *rss.Feed) (*rss.Item, error) {
-	var dbid, feedID int
-	var guid, title, description, link, author sql.NullString
-	var pubDate sql.NullString
-	var read int
-	var enclosureURL, enclosureType sql.NullString
-	var enclosureLength sql.NullInt64
+func ItemDeserialize(r RowScanner) (*rss.Item, error) {
+	var (
+		dbid, discardFeedId                                   int
+		guid, title, description, strLink, author, strPubDate sql.NullString
+		rawRead, rawStarred                                   int
+		pubDate                                               time.Time
+		link                                                  *url.URL
+		read, starred                                         bool
+	)
 
-	err := r.Scan(&dbid, &feedID, &guid, &title, &description, &link, &author, &pubDate, &read, &enclosureURL, &enclosureType, &enclosureLength)
+	err := r.Scan(&dbid, &discardFeedId, &guid, &title, &description, &strLink, &author, &strPubDate, &rawRead, &rawStarred)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan row: %w", err)
 	}
 
-	var (
-		urlLink, urlEnclosure *url.URL
-		timePubDate           *time.Time
-		enclosure             *rss.Enclosure
-	)
+	link = safeURLParse(strLink)
 
-	urlLink = safeURLParse(link)
-
-	if pubDate.Valid {
-		t, err := time.Parse(time.RFC3339, pubDate.String)
-		if err == nil {
-			timePubDate = &t
-		}
+	if strPubDate.Valid {
+		pubDate, err = time.Parse(time.RFC3339, strPubDate.String)
 	}
 
-	urlEnclosure = safeURLParse(enclosureURL)
-	if urlEnclosure != nil && enclosureType.Valid && enclosureLength.Valid {
-		enclosure = &rss.Enclosure{
-			URL:      urlEnclosure,
-			MimeType: enclosureType.String,
-			Length:   int(enclosureLength.Int64),
-		}
-	}
+	read = rawRead == 1
+	starred = rawStarred == 1
 
 	return &rss.Item{
-		DatabaseID: dbid,
-		Feed:       feed,
-		GUID:       guid.String,
-		Title:      title.String,
-		Description: func() string {
-			if description.Valid {
-				return description.String
-			}
-			return ""
-		}(),
-		Link:      urlLink,
-		Author:    author.String,
-		PubDate:   timePubDate,
-		Read:      read != 0, // int to bool conversion
-		Enclosure: enclosure,
+		DatabaseID:  dbid,
+		GUID:        guid.String,
+		Title:       title.String,
+		Description: description.String,
+		Link:        link,
+		Author:      author.String,
+		PubDate:     &pubDate,
+		Read:        read,
+		Starred:     starred,
 	}, nil
+
 }
 
 // ENCLOSURES //
