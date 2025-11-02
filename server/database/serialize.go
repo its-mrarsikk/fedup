@@ -24,7 +24,7 @@ func safeURLParse(s sql.NullString) *url.URL {
 	return u
 }
 
-func FeedSerializeInsert(f *rss.Feed) ([]any, string) {
+func feedSerializeInsert(f *rss.Feed) ([]any, string) {
 	var link, fetchFrom, lastModified string
 	if f.Link != nil {
 		link = f.Link.String()
@@ -48,7 +48,7 @@ func FeedSerializeInsert(f *rss.Feed) ([]any, string) {
 	}, "INSERT INTO feeds VALUES (?,?,?,?,?,?,?,?,?);"
 }
 
-func FeedSerializeUpdate(f *rss.Feed) ([]any, string) {
+func feedSerializeUpdate(f *rss.Feed) ([]any, string) {
 	var link, fetchFrom, lastModified string
 	if f.Link != nil {
 		link = f.Link.String()
@@ -73,7 +73,7 @@ func FeedSerializeUpdate(f *rss.Feed) ([]any, string) {
 	}, "UPDATE feeds SET title = ?, description = ?, link = ?, fetchFrom = ?, language = ?, ttl = ?, etag = ?, lastModified = ? WHERE id = ?;"
 }
 
-func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
+func feedDeserialize(r RowScanner) (*rss.Feed, error) {
 	var dbid int
 	var title, description string
 	var link, fetchFrom, language, etag, strLastModified sql.NullString
@@ -129,7 +129,7 @@ func FeedDeserialize(r RowScanner) (*rss.Feed, error) {
 
 // ITEMS //
 
-func ItemSerializeInsert(i *rss.Item) ([]any, string) {
+func itemSerializeInsert(i *rss.Item) ([]any, string) {
 	var link, pubDate string
 
 	if i.Link != nil {
@@ -153,7 +153,7 @@ func ItemSerializeInsert(i *rss.Item) ([]any, string) {
 	}, "INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?);"
 }
 
-func ItemSerializeUpdate(i *rss.Item) ([]any, string) {
+func itemSerializeUpdate(i *rss.Item) ([]any, string) {
 	var link, pubDate string
 
 	if i.Link != nil {
@@ -177,7 +177,7 @@ func ItemSerializeUpdate(i *rss.Item) ([]any, string) {
 	}, "UPDATE items SET feed_id = ?, guid = ?, title = ?, description = ?, link = ?, author = ?, pubDate = ?, read = ?, starred = ? WHERE id = ?;"
 }
 
-func ItemDeserialize(r RowScanner) (*rss.Item, error) {
+func itemDeserialize(r RowScanner) (*rss.Item, error) {
 	var (
 		dbid, discardFeedId                                   int
 		guid, title, description, strLink, author, strPubDate sql.NullString
@@ -217,7 +217,7 @@ func ItemDeserialize(r RowScanner) (*rss.Item, error) {
 
 // ENCLOSURES //
 
-func EnclosureSerializeInsert(e *rss.Enclosure, itemId int) ([]any, string) {
+func enclosureSerializeInsert(e *rss.Enclosure, itemId int) ([]any, string) {
 	return []any{
 		nil,
 		itemId,
@@ -227,7 +227,7 @@ func EnclosureSerializeInsert(e *rss.Enclosure, itemId int) ([]any, string) {
 	}, "INSERT INTO enclosures VALUES (?, ?, ?, ?, ?);"
 }
 
-func EnclosureSerializeUpdate(e *rss.Enclosure) ([]any, string) {
+func enclosureSerializeUpdate(e *rss.Enclosure) ([]any, string) {
 	return []any{
 		e.MimeType,
 		e.URL.String(),
@@ -236,7 +236,7 @@ func EnclosureSerializeUpdate(e *rss.Enclosure) ([]any, string) {
 	}, "UPDATE enclosures SET type = ?, url = ?, filePath = ? WHERE id = ?;"
 }
 
-func EnclosureDeserialize(r RowScanner) (*rss.Enclosure, error) {
+func enclosureDeserialize(r RowScanner) (*rss.Enclosure, error) {
 	var dbid int
 	var discardItemId int // for some reason i cant use _ in Scan?
 	var mimeType, rawUrl, filePath string
