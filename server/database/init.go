@@ -15,7 +15,12 @@ import (
 //go:embed sql/init.sql
 var init_query string
 
-func InitDB(name string) (*sql.DB, error) {
+// Database is a wrapper around [sql.DB]. It provides convenience methods for storing and retrieving data.
+type Database struct {
+	*sql.DB
+}
+
+func InitDB(name string) (*Database, error) {
 	db, err := sql.Open("sqlite3", name)
 	if err != nil {
 		return nil, err
@@ -33,5 +38,5 @@ func InitDB(name string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to create tables: %w", err)
 	}
 
-	return db, nil
+	return &Database{DB: db}, nil
 }
