@@ -18,9 +18,9 @@ func TestBaseRSS2(t *testing.T) {
 	}
 
 	const (
-		expectedTitle           = "NASA Space Station News"
-		expectedItemTitle       = "Louisiana Students to Hear from NASA Astronauts Aboard Space Station"
-		expectedEnclosureLength = 1032272
+		expectedTitle        = "NASA Space Station News"
+		expectedItemTitle    = "Louisiana Students to Hear from NASA Astronauts Aboard Space Station"
+		expectedEnclosureURL = "http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/iss068e027836orig.jpg?itok=ucNUaaGx"
 	)
 
 	if feed.Title != expectedTitle {
@@ -31,7 +31,7 @@ func TestBaseRSS2(t *testing.T) {
 		t.Fatalf("expected item title %s, got %s", feed.Items[0].Title, expectedItemTitle)
 	}
 
-	if feed.Items[2].Enclosure.Length != expectedEnclosureLength {
-		t.Fatalf("expected enclosure length %d, got %d", expectedEnclosureLength, feed.Items[2].Enclosure.Length)
+	if feed.Items[2].Enclosure.URL.String() != expectedEnclosureURL {
+		t.Fatalf("expected enclosure url %q, got %q", feed.Items[2].Enclosure.URL.String(), expectedEnclosureURL)
 	}
 }
