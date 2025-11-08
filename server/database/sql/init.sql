@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS enclosures (
     FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
-CREATE VIEW default_read AS SELECT * FROM items WHERE read = 0 OR starred = 1;
+CREATE VIEW IF NOT EXISTS default_read AS SELECT * FROM items WHERE read = 0 OR starred = 1;
