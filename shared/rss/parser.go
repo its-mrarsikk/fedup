@@ -84,13 +84,13 @@ func itemElementToItem(e *etree.Element, feed *Feed) (*Item, error) {
 
 	// TODO: add error handling
 	item := &Item{
-		Feed:        feed,
+		Feed:        *feed,
 		GUID:        e.SelectElement("guid").NotNil().Text(),
 		Title:       e.SelectElement("title").NotNil().Text(),
 		Description: e.SelectElement("description").NotNil().Text(),
 		Link:        func() *url.URL { url, _ := url.Parse(e.SelectElement("link").NotNil().Text()); return url }(),
 		Author:      e.SelectElement("author").NotNil().Text(),
-		PubDate:     func() *time.Time { date, _ := parseRSSDate(e.SelectElement("pubDate").NotNil().Text()); return &date }(),
+		PubDate:     func() time.Time { date, _ := parseRSSDate(e.SelectElement("pubDate").NotNil().Text()); return date }(),
 	}
 
 	var enclosure *Enclosure
@@ -135,7 +135,7 @@ func ParseRSS(r io.Reader) (*Feed, error) {
 			log.Printf("failed to parse <item> element in feed %q: %s", feed.Title, err)
 			continue
 		}
-		feed.Items = append(feed.Items, item)
+		feed.Items = append(feed.Items, *item)
 	}
 
 	return feed, nil
