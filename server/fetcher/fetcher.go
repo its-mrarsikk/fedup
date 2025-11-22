@@ -115,6 +115,7 @@ func (ff *FetchFeed) fetch() (io.ReadCloser, error) {
 }
 
 func (ff *FetchFeed) fetchAndParse() error {
+	log.Printf("Fetching: %s", ff.url)
 	r, err := ff.fetch()
 	if err != nil {
 		return fmt.Errorf("failed to fetch feed %q: %w", ff.url.String(), err)
