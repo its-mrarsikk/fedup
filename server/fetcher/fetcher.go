@@ -168,26 +168,18 @@ func (ff *FetchFeed) watch() {
 	}
 }
 
-func (f *Fetcher) AddFeed(rawurl string, optTtl *time.Duration) error {
+// Adds a feed for the fetcher to download.
+func (f *Fetcher) AddFeed(feedURL string, ttl time.Duration) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	parsedURL, err := url.Parse(rawurl)
+	parsedURL, err := url.Parse(feedURL)
 	if err != nil {
-		return err
-	}
-
-	var ttl time.Duration
-	if optTtl != nil {
-		ttl = *optTtl
-		if ttl <= 0 {
-			return errors.New("ttl is 0 or negative")
-		}
-	} else {
-		ttl = 60 * time.Minute
+		return fmt.Errorf("invalid url: %w", err)
 	}
 
 	ff := &FetchFeed{url: parsedURL, ttl: ttl, fetcher: f}
+
 	if f.started {
 		ff.ticker = time.NewTicker(ttl)
 		go ff.watch()

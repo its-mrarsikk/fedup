@@ -26,9 +26,8 @@ func TestFetchAndParse(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	ttlVar := ttl
 	f := fetcher.NewFetcher()
-	f.AddFeed(srv.URL, &ttlVar)
+	f.AddFeed(srv.URL, ttl)
 	err := f.Start()
 	if err != nil {
 		t.Fatalf("%s", err)
@@ -81,9 +80,8 @@ func TestLastModified(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	ttlVar := ttl
 	f := fetcher.NewFetcher()
-	f.AddFeed(srv.URL, &ttlVar)
+	f.AddFeed(srv.URL, ttl)
 
 	err = f.Start()
 	if err != nil {
@@ -127,9 +125,8 @@ func TestETag(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	ttlVar := ttl
 	f := fetcher.NewFetcher()
-	f.AddFeed(srv.URL, &ttlVar)
+	f.AddFeed(srv.URL, ttl)
 
 	err := f.Start()
 	if err != nil {
@@ -167,9 +164,8 @@ func TestRespectsTTL(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	ttlVar := ttl
 	f := fetcher.NewFetcher()
-	f.AddFeed(srv.URL, &ttlVar)
+	f.AddFeed(srv.URL, ttl)
 	err := f.Start()
 	if err != nil {
 		t.Fatalf("failed to start fetcher: %s", err)
@@ -201,8 +197,7 @@ func TestCached304(t *testing.T) {
 	defer srv.Close()
 
 	f := fetcher.NewFetcher()
-	var ttlVar = ttl
-	if err := f.AddFeed(srv.URL, &ttlVar); err != nil {
+	if err := f.AddFeed(srv.URL, ttl); err != nil {
 		t.Fatalf("AddFeed error: %v", err)
 	}
 	if err := f.Start(); err != nil {
@@ -240,8 +235,8 @@ func TestTimeout(t *testing.T) {
 
 	client := &http.Client{Timeout: 50 * time.Millisecond}
 	f := fetcher.NewFetcherWithClient(client)
-	ttlVar := ttl
-	if err := f.AddFeed(srv.URL, &ttlVar); err != nil {
+
+	if err := f.AddFeed(srv.URL, ttl); err != nil {
 		t.Fatalf("AddFeed error: %v", err)
 	}
 	if err := f.Start(); err != nil {
@@ -270,8 +265,7 @@ func TestStop(t *testing.T) {
 	defer srv.Close()
 
 	f := fetcher.NewFetcher()
-	ttlVar := ttl
-	if err := f.AddFeed(srv.URL, &ttlVar); err != nil {
+	if err := f.AddFeed(srv.URL, ttl); err != nil {
 		t.Fatalf("AddFeed error: %v", err)
 	}
 	if err := f.Start(); err != nil {
