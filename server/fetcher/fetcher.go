@@ -132,12 +132,12 @@ func (ff *FetchFeed) fetchAndParse() error {
 	}
 
 	parsed.FetchFrom = ff.url
-	ff.fetcher.Ch.FetchedFeeds <- parsed
 
 	if parsed.TTL != 0 && !(time.Duration(parsed.TTL)*time.Minute == ff.ttl) {
 		ff.ttl = time.Duration(parsed.TTL) * time.Minute
 		return ErrNewTTL
 	}
+	ff.fetcher.Ch.FetchedFeeds <- parsed
 
 	return nil
 }
