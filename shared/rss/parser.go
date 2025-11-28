@@ -84,7 +84,6 @@ func itemElementToItem(e *etree.Element, feed *Feed) (*Item, error) {
 
 	// TODO: add error handling
 	item := &Item{
-		Feed:        *feed,
 		GUID:        e.SelectElement("guid").NotNil().Text(),
 		Title:       e.SelectElement("title").NotNil().Text(),
 		Description: e.SelectElement("description").NotNil().Text(),
