@@ -62,7 +62,7 @@ func (db *Database) UpsertItem(item *rss.Item, recurse bool, ctx context.Context
 	ON CONFLICT(guid) DO UPDATE
 	SET created_at=excluded.created_at,
 	updated_at=excluded.updated_at,
-	feed_id=excluded.feed_id
+	feed_id=excluded.feed_id,
 	guid=excluded.guid,
 	title=excluded.title,
 	description=excluded.description,

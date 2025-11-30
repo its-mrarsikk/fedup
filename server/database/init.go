@@ -3,8 +3,8 @@ package database
 import (
 	"fmt"
 
-	"github.com/glebarez/sqlite"
 	"github.com/its-mrarsikk/fedup/shared/rss"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
