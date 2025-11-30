@@ -131,7 +131,7 @@ func (ff *FetchFeed) fetchAndParse() error {
 		return fmt.Errorf("failed to parse feed %q: %w", ff.url.String(), err)
 	}
 
-	parsed.FetchFrom = ff.url
+	parsed.FetchFrom = ff.url.String()
 
 	if parsed.TTL != 0 && !(time.Duration(parsed.TTL)*time.Minute == ff.ttl) {
 		ff.ttl = time.Duration(parsed.TTL) * time.Minute
