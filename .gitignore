@@ -34,3 +34,6 @@ go.work.sum
 # Output binaries
 fedup
 fedupd
+
+# Database testing
+*.db
